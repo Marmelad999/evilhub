@@ -95,3 +95,9 @@ end
 
 -- Обработчик события нажатия на кнопку
 applyButton.MouseButton1Click:Connect(applyChanges)
+
+-- Отладочные сообщения, чтобы убедиться, что элементы создаются
+print("EvilHub GUI загружен успешно!")
+
+-- Для проверки, что элементы отображаются корректно
+frame.Visible = true
