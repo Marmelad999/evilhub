@@ -1,82 +1,73 @@
--- EvilHub written UI Library (2025)
--- API: Window -> Tabs -> Sections -> Elements (Button, Toggle, Slider, TextBox)
-
+-- UI Library (2025, Evil Edition)
 local Library = {}
-local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
-local ConfigName = "EvilUIConfig.json"
-local Config = {}
-
-pcall(function()
-    if isfile(ConfigName) then
-        Config = HttpService:JSONDecode(readfile(ConfigName))
-    else
-        writefile(ConfigName, HttpService:JSONEncode(Config))
-    end
-end)
-
+-- 🎨 Темы
 local Themes = {
-    Dark = {
-        Background = Color3.fromRGB(30, 30, 30),
+    Evil = {
+        Background = Color3.fromRGB(10, 10, 10),
         Header = Color3.fromRGB(20, 20, 20),
         Text = Color3.fromRGB(255, 255, 255),
-        Accent = Color3.fromRGB(0, 170, 255),
-        Element = Color3.fromRGB(40, 40, 40)
-    },
-    Light = {
-        Background = Color3.fromRGB(240, 240, 240),
-        Header = Color3.fromRGB(200, 200, 200),
-        Text = Color3.fromRGB(0, 0, 0),
-        Accent = Color3.fromRGB(0, 100, 255),
-        Element = Color3.fromRGB(220, 220, 220)
+        Accent = Color3.fromRGB(200, 0, 0),
+        Element = Color3.fromRGB(30, 30, 30),
+        Gradient = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 0, 0))
+        }
     }
 }
 
 -- 🔥 Создание окна
 function Library:CreateWindow(opts)
     opts = opts or {}
-    local theme = Themes[opts.Theme or "Dark"]
+    local theme = Themes[opts.Theme or "Evil"]
 
-    -- ScreenGui
     local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Parent = game.CoreGui
     ScreenGui.Name = opts.Title or "UI"
+    ScreenGui.Parent = game.CoreGui
     ScreenGui.ResetOnSpawn = false
 
-    -- Основное окно
+    -- Окно
     local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0, 500, 0, 300)
+    Main.Size = UDim2.new(0, 520, 0, 340)
     Main.Position = UDim2.new(0.3, 0, 0.3, 0)
     Main.BackgroundColor3 = theme.Background
     Main.Parent = ScreenGui
 
     local UICorner = Instance.new("UICorner", Main)
-    UICorner.CornerRadius = UDim.new(0, 6)
+    UICorner.CornerRadius = UDim.new(0, 10)
+
+    local UIStroke = Instance.new("UIStroke", Main)
+    UIStroke.Thickness = 2
+    UIStroke.Color = theme.Accent
+
+    local Gradient = Instance.new("UIGradient", Main)
+    Gradient.Color = theme.Gradient
+    Gradient.Rotation = 45
 
     -- Заголовок
     local Header = Instance.new("TextLabel")
-    Header.Size = UDim2.new(1, 0, 0, 30)
+    Header.Size = UDim2.new(1, 0, 0, 40)
     Header.Text = opts.Title or "Window"
     Header.TextColor3 = theme.Text
-    Header.Font = Enum.Font.GothamBold
-    Header.TextSize = 16
+    Header.Font = Enum.Font.FredokaOne
+    Header.TextSize = 22
     Header.BackgroundColor3 = theme.Header
     Header.Parent = Main
 
-    -- Dragging
-    local dragging, dragInput, startPos, startInput
+    -- Drag
+    local dragging, dragStart, startPos
     Header.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
+            dragStart = input.Position
             startPos = Main.Position
-            startInput = input.Position
         end
     end)
     UIS.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - startInput
+            local delta = input.Position - dragStart
             Main.Position = UDim2.new(
                 startPos.X.Scale, startPos.X.Offset + delta.X,
                 startPos.Y.Scale, startPos.Y.Offset + delta.Y
@@ -89,19 +80,18 @@ function Library:CreateWindow(opts)
         end
     end)
 
-    -- Навигация (Tabs)
+    -- Таб-кнопки
     local TabButtons = Instance.new("Frame", Main)
-    TabButtons.Size = UDim2.new(0, 120, 1, -30)
-    TabButtons.Position = UDim2.new(0, 0, 0, 30)
+    TabButtons.Size = UDim2.new(0, 130, 1, -40)
+    TabButtons.Position = UDim2.new(0, 0, 0, 40)
     TabButtons.BackgroundColor3 = theme.Header
 
     local UIList = Instance.new("UIListLayout", TabButtons)
-    UIList.Padding = UDim.new(0, 5)
-    UIList.SortOrder = Enum.SortOrder.LayoutOrder
+    UIList.Padding = UDim.new(0, 6)
 
     local Pages = Instance.new("Frame", Main)
-    Pages.Size = UDim2.new(1, -120, 1, -30)
-    Pages.Position = UDim2.new(0, 120, 0, 30)
+    Pages.Size = UDim2.new(1, -130, 1, -40)
+    Pages.Position = UDim2.new(0, 130, 0, 40)
     Pages.BackgroundTransparency = 1
 
     -- API Tabs
@@ -109,10 +99,10 @@ function Library:CreateWindow(opts)
 
     function Tabs:NewTab(name)
         local Button = Instance.new("TextButton")
-        Button.Size = UDim2.new(1, -10, 0, 25)
+        Button.Size = UDim2.new(1, -10, 0, 28)
         Button.Text = name
         Button.TextColor3 = theme.Text
-        Button.Font = Enum.Font.Gotham
+        Button.Font = Enum.Font.GothamBold
         Button.TextSize = 14
         Button.BackgroundColor3 = theme.Element
         Button.Parent = TabButtons
@@ -120,11 +110,10 @@ function Library:CreateWindow(opts)
         local Page = Instance.new("ScrollingFrame", Pages)
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.Visible = false
-        Page.CanvasSize = UDim2.new(0, 0, 0, 0)
         Page.ScrollBarThickness = 4
+
         local PageLayout = Instance.new("UIListLayout", Page)
-        PageLayout.Padding = UDim.new(0, 5)
-        PageLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        PageLayout.Padding = UDim.new(0, 6)
 
         Button.MouseButton1Click:Connect(function()
             for _, v in ipairs(Pages:GetChildren()) do
@@ -137,14 +126,13 @@ function Library:CreateWindow(opts)
             Button.BackgroundColor3 = theme.Accent
         end)
 
-        -- Первый таб активный
+        -- первый таб активный
         if #TabButtons:GetChildren() == 2 then
             Page.Visible = true
             Button.BackgroundColor3 = theme.Accent
         end
 
         local Sections = {}
-
         function Sections:NewSection(secName)
             local SectionFrame = Instance.new("Frame", Page)
             SectionFrame.Size = UDim2.new(1, -10, 0, 30)
@@ -153,15 +141,11 @@ function Library:CreateWindow(opts)
             local Title = Instance.new("TextLabel", SectionFrame)
             Title.Text = secName
             Title.Size = UDim2.new(1, 0, 0, 20)
-            Title.TextXAlignment = Enum.TextXAlignment.Left
             Title.TextColor3 = theme.Text
             Title.Font = Enum.Font.GothamBold
-            Title.TextSize = 14
+            Title.TextSize = 16
             Title.BackgroundTransparency = 1
-
-            local SectionList = Instance.new("UIListLayout", SectionFrame)
-            SectionList.Padding = UDim.new(0, 4)
-            SectionList.SortOrder = Enum.SortOrder.LayoutOrder
+            Title.TextXAlignment = Enum.TextXAlignment.Left
 
             local Elements = {}
 
@@ -181,7 +165,7 @@ function Library:CreateWindow(opts)
             function Elements:NewToggle(text, default, callback)
                 local Btn = Instance.new("TextButton", SectionFrame)
                 Btn.Size = UDim2.new(1, -10, 0, 30)
-                Btn.Text = text .. " [" .. (default and "ON" or "OFF") .. "]"
+                Btn.Text = text .. (default and " [ON]" or " [OFF]")
                 Btn.TextColor3 = theme.Text
                 Btn.BackgroundColor3 = theme.Element
                 Btn.Font = Enum.Font.Gotham
@@ -190,77 +174,18 @@ function Library:CreateWindow(opts)
                 local state = default or false
                 Btn.MouseButton1Click:Connect(function()
                     state = not state
-                    Btn.Text = text .. " [" .. (state and "ON" or "OFF") .. "]"
+                    Btn.Text = text .. (state and " [ON]" or " [OFF]")
+                    Btn.BackgroundColor3 = state and theme.Accent or theme.Element
                     if callback then callback(state) end
-                end)
-            end
-
-            -- Slider
-            function Elements:NewSlider(text, min, max, default, callback)
-                local Frame = Instance.new("Frame", SectionFrame)
-                Frame.Size = UDim2.new(1, -10, 0, 40)
-                Frame.BackgroundTransparency = 1
-
-                local Label = Instance.new("TextLabel", Frame)
-                Label.Text = text .. ": " .. default
-                Label.Size = UDim2.new(1, 0, 0, 20)
-                Label.TextColor3 = theme.Text
-                Label.Font = Enum.Font.Gotham
-                Label.TextSize = 14
-                Label.BackgroundTransparency = 1
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-
-                local SliderBack = Instance.new("Frame", Frame)
-                SliderBack.Size = UDim2.new(1, -20, 0, 10)
-                SliderBack.Position = UDim2.new(0, 10, 0, 25)
-                SliderBack.BackgroundColor3 = theme.Element
-
-                local Fill = Instance.new("Frame", SliderBack)
-                Fill.Size = UDim2.new((default-min)/(max-min), 0, 1, 0)
-                Fill.BackgroundColor3 = theme.Accent
-
-                local dragging = false
-                SliderBack.InputBegan:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = true
-                    end
-                end)
-                UIS.InputEnded:Connect(function(input)
-                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        dragging = false
-                    end
-                end)
-                UIS.InputChanged:Connect(function(input)
-                    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-                        local rel = math.clamp((input.Position.X - SliderBack.AbsolutePosition.X) / SliderBack.AbsoluteSize.X, 0, 1)
-                        Fill.Size = UDim2.new(rel, 0, 1, 0)
-                        local val = math.floor(min + (max-min) * rel)
-                        Label.Text = text .. ": " .. val
-                        if callback then callback(val) end
-                    end
                 end)
             end
 
             -- TextBox
             function Elements:NewTextbox(text, placeholder, callback)
-                local Frame = Instance.new("Frame", SectionFrame)
-                Frame.Size = UDim2.new(1, -10, 0, 40)
-                Frame.BackgroundTransparency = 1
-
-                local Label = Instance.new("TextLabel", Frame)
-                Label.Text = text
-                Label.Size = UDim2.new(1, 0, 0, 20)
-                Label.TextColor3 = theme.Text
-                Label.Font = Enum.Font.Gotham
-                Label.TextSize = 14
-                Label.BackgroundTransparency = 1
-                Label.TextXAlignment = Enum.TextXAlignment.Left
-
-                local Box = Instance.new("TextBox", Frame)
-                Box.Size = UDim2.new(1, -20, 0, 20)
-                Box.Position = UDim2.new(0, 10, 0, 20)
-                Box.PlaceholderText = placeholder or "Enter..."
-                Box.Text = ""
+                local Box = Instance.new("TextBox", SectionFrame)
+                Box.Size = UDim2.new(1, -10, 0, 30)
+                Box.PlaceholderText = text
+                Box.Text = placeholder or ""
                 Box.TextColor3 = theme.Text
                 Box.BackgroundColor3 = theme.Element
                 Box.Font = Enum.Font.Gotham
