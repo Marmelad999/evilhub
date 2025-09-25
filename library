@@ -1,4 +1,5 @@
--- UI Library (2025, Evil Edition)
+-- говнокод не юзать
+
 local Library = {}
 local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
