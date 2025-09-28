@@ -1,209 +1,92 @@
--- говнокод не юзать
-
+-- UI_Library.lua
 local Library = {}
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 
--- 🎨 Темы
-local Themes = {
-    Evil = {
-        Background = Color3.fromRGB(10, 10, 10),
-        Header = Color3.fromRGB(20, 20, 20),
-        Text = Color3.fromRGB(255, 255, 255),
-        Accent = Color3.fromRGB(200, 0, 0),
-        Element = Color3.fromRGB(30, 30, 30),
-        Gradient = ColorSequence.new{
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 0, 0)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 0, 0))
-        }
-    }
-}
+-- Создать ScreenGui
+function Library:CreateScreenGui(name, parent)
+    local gui = Instance.new("ScreenGui")
+    gui.Name = name or "CustomUI"
+    gui.ResetOnSpawn = false
+    gui.Parent = parent or game.Players.LocalPlayer:WaitForChild("PlayerGui")
+    return gui
+end
 
--- 🔥 Создание окна
-function Library:CreateWindow(opts)
-    opts = opts or {}
-    local theme = Themes[opts.Theme or "Evil"]
+-- Создать Frame (окно)
+function Library:CreateFrame(parent, size, position, bgColor)
+    local frame = Instance.new("Frame")
+    frame.Size = size or UDim2.new(0, 400, 0, 300)
+    frame.Position = position or UDim2.new(0.5, -200, 0.5, -150)
+    frame.BackgroundColor3 = bgColor or Color3.fromRGB(30, 30, 30)
+    frame.BorderSizePixel = 2
+    frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+    frame.Parent = parent
+    return frame
+end
 
-    local ScreenGui = Instance.new("ScreenGui")
-    ScreenGui.Name = opts.Title or "UI"
-    ScreenGui.Parent = game.CoreGui
-    ScreenGui.ResetOnSpawn = false
-
-    -- Окно
-    local Main = Instance.new("Frame")
-    Main.Size = UDim2.new(0, 520, 0, 340)
-    Main.Position = UDim2.new(0.3, 0, 0.3, 0)
-    Main.BackgroundColor3 = theme.Background
-    Main.Parent = ScreenGui
-
-    local UICorner = Instance.new("UICorner", Main)
-    UICorner.CornerRadius = UDim.new(0, 10)
-
-    local UIStroke = Instance.new("UIStroke", Main)
-    UIStroke.Thickness = 2
-    UIStroke.Color = theme.Accent
-
-    local Gradient = Instance.new("UIGradient", Main)
-    Gradient.Color = theme.Gradient
-    Gradient.Rotation = 45
-
-    -- Заголовок
-    local Header = Instance.new("TextLabel")
-    Header.Size = UDim2.new(1, 0, 0, 40)
-    Header.Text = opts.Title or "Window"
-    Header.TextColor3 = theme.Text
-    Header.Font = Enum.Font.FredokaOne
-    Header.TextSize = 22
-    Header.BackgroundColor3 = theme.Header
-    Header.Parent = Main
-
-    -- Drag
+-- Сделать окно перетаскиваемым
+function Library:MakeDraggable(frame, dragHeight)
+    local UIS = game:GetService("UserInputService")
     local dragging, dragStart, startPos
-    Header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and input.Position.Y < frame.AbsolutePosition.Y + (dragHeight or 40) then
             dragging = true
             dragStart = input.Position
-            startPos = Main.Position
+            startPos = frame.Position
         end
     end)
-    UIS.InputChanged:Connect(function(input)
+    frame.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
-            Main.Position = UDim2.new(
-                startPos.X.Scale, startPos.X.Offset + delta.X,
-                startPos.Y.Scale, startPos.Y.Offset + delta.Y
-            )
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-    UIS.InputEnded:Connect(function(input)
+    frame.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
+end
 
-    -- Таб-кнопки
-    local TabButtons = Instance.new("Frame", Main)
-    TabButtons.Size = UDim2.new(0, 130, 1, -40)
-    TabButtons.Position = UDim2.new(0, 0, 0, 40)
-    TabButtons.BackgroundColor3 = theme.Header
+-- Создать Label
+function Library:CreateLabel(parent, text, size, pos, textSize, color, font)
+    local lbl = Instance.new("TextLabel")
+    lbl.Size = size or UDim2.new(0, 100, 0, 30)
+    lbl.Position = pos or UDim2.new(0, 10, 0, 10)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text or "Label"
+    lbl.TextColor3 = color or Color3.fromRGB(255, 255, 255)
+    lbl.TextSize = textSize or 18
+    lbl.Font = font or Enum.Font.Gotham
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Parent = parent
+    return lbl
+end
 
-    local UIList = Instance.new("UIListLayout", TabButtons)
-    UIList.Padding = UDim.new(0, 6)
+-- Создать TextBox
+function Library:CreateTextBox(parent, default, size, pos)
+    local tb = Instance.new("TextBox")
+    tb.Size = size or UDim2.new(0, 100, 0, 30)
+    tb.Position = pos or UDim2.new(0, 120, 0, 10)
+    tb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    tb.Text = default or ""
+    tb.TextColor3 = Color3.fromRGB(0, 0, 0)
+    tb.TextSize = 18
+    tb.Font = Enum.Font.Gotham
+    tb.Parent = parent
+    return tb
+end
 
-    local Pages = Instance.new("Frame", Main)
-    Pages.Size = UDim2.new(1, -130, 1, -40)
-    Pages.Position = UDim2.new(0, 130, 0, 40)
-    Pages.BackgroundTransparency = 1
-
-    -- API Tabs
-    local Tabs = {}
-
-    function Tabs:NewTab(name)
-        local Button = Instance.new("TextButton")
-        Button.Size = UDim2.new(1, -10, 0, 28)
-        Button.Text = name
-        Button.TextColor3 = theme.Text
-        Button.Font = Enum.Font.GothamBold
-        Button.TextSize = 14
-        Button.BackgroundColor3 = theme.Element
-        Button.Parent = TabButtons
-
-        local Page = Instance.new("ScrollingFrame", Pages)
-        Page.Size = UDim2.new(1, 0, 1, 0)
-        Page.Visible = false
-        Page.ScrollBarThickness = 4
-
-        local PageLayout = Instance.new("UIListLayout", Page)
-        PageLayout.Padding = UDim.new(0, 6)
-
-        Button.MouseButton1Click:Connect(function()
-            for _, v in ipairs(Pages:GetChildren()) do
-                if v:IsA("ScrollingFrame") then v.Visible = false end
-            end
-            for _, v in ipairs(TabButtons:GetChildren()) do
-                if v:IsA("TextButton") then v.BackgroundColor3 = theme.Element end
-            end
-            Page.Visible = true
-            Button.BackgroundColor3 = theme.Accent
-        end)
-
-        -- первый таб активный
-        if #TabButtons:GetChildren() == 2 then
-            Page.Visible = true
-            Button.BackgroundColor3 = theme.Accent
-        end
-
-        local Sections = {}
-        function Sections:NewSection(secName)
-            local SectionFrame = Instance.new("Frame", Page)
-            SectionFrame.Size = UDim2.new(1, -10, 0, 30)
-            SectionFrame.BackgroundTransparency = 1
-
-            local Title = Instance.new("TextLabel", SectionFrame)
-            Title.Text = secName
-            Title.Size = UDim2.new(1, 0, 0, 20)
-            Title.TextColor3 = theme.Text
-            Title.Font = Enum.Font.GothamBold
-            Title.TextSize = 16
-            Title.BackgroundTransparency = 1
-            Title.TextXAlignment = Enum.TextXAlignment.Left
-
-            local Elements = {}
-
-            -- Button
-            function Elements:NewButton(text, callback)
-                local Btn = Instance.new("TextButton", SectionFrame)
-                Btn.Size = UDim2.new(1, -10, 0, 30)
-                Btn.Text = text
-                Btn.TextColor3 = theme.Text
-                Btn.Font = Enum.Font.Gotham
-                Btn.TextSize = 14
-                Btn.BackgroundColor3 = theme.Element
-                Btn.MouseButton1Click:Connect(callback or function() end)
-            end
-
-            -- Toggle
-            function Elements:NewToggle(text, default, callback)
-                local Btn = Instance.new("TextButton", SectionFrame)
-                Btn.Size = UDim2.new(1, -10, 0, 30)
-                Btn.Text = text .. (default and " [ON]" or " [OFF]")
-                Btn.TextColor3 = theme.Text
-                Btn.BackgroundColor3 = theme.Element
-                Btn.Font = Enum.Font.Gotham
-                Btn.TextSize = 14
-
-                local state = default or false
-                Btn.MouseButton1Click:Connect(function()
-                    state = not state
-                    Btn.Text = text .. (state and " [ON]" or " [OFF]")
-                    Btn.BackgroundColor3 = state and theme.Accent or theme.Element
-                    if callback then callback(state) end
-                end)
-            end
-
-            -- TextBox
-            function Elements:NewTextbox(text, placeholder, callback)
-                local Box = Instance.new("TextBox", SectionFrame)
-                Box.Size = UDim2.new(1, -10, 0, 30)
-                Box.PlaceholderText = text
-                Box.Text = placeholder or ""
-                Box.TextColor3 = theme.Text
-                Box.BackgroundColor3 = theme.Element
-                Box.Font = Enum.Font.Gotham
-                Box.TextSize = 14
-
-                Box.FocusLost:Connect(function(enter)
-                    if enter and callback then callback(Box.Text) end
-                end)
-            end
-
-            return Elements
-        end
-
-        return Sections
-    end
-
-    return Tabs
+-- Создать кнопку
+function Library:CreateButton(parent, text, size, pos, color, textColor)
+    local btn = Instance.new("TextButton")
+    btn.Size = size or UDim2.new(0, 100, 0, 30)
+    btn.Position = pos or UDim2.new(0, 10, 0, 50)
+    btn.BackgroundColor3 = color or Color3.fromRGB(255, 0, 0)
+    btn.Text = text or "Button"
+    btn.TextColor3 = textColor or Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 18
+    btn.Font = Enum.Font.GothamBold
+    btn.Parent = parent
+    return btn
 end
 
 return Library
