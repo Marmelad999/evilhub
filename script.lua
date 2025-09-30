@@ -20,7 +20,7 @@ local AutoPotionEnabled = false
 
 -- Создаём GUI через библиотеку
 local screenGui = Library:CreateScreenGui("EvilHub", playerGui)
-local frame = Library:CreateFrame(screenGui, UDim2.new(0, 400, 0, 350), UDim2.new(0.5, -200, 0.5, -175), Color3.fromRGB(30, 30, 30))
+local frame = Library:CreateFrame(screenGui, UDim2.new(0, 400, 0, 405), UDim2.new(0.5, -200, 0.5, -175), Color3.fromRGB(30, 30, 30))
 Library:MakeDraggable(frame, 40)
 
 -- Заголовок и кнопки управления
@@ -230,6 +230,49 @@ autoPotionBtn.MouseButton1Click:Connect(function()
 	autoPotionBtn.BackgroundColor3 = AutoPotionEnabled and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(50, 50, 50)
 end)
 
+-- Legit Button
+local legitButton = Library:CreateButton(frame, "Legit", UDim2.new(0, 200, 0, 50), UDim2.new(0.5, -100, 0, startY + spacingY * 5 + 20), Color3.fromRGB(0, 100, 255))
+legitButton.Font = Enum.Font.SourceSansBold
+legitButton.TextSize = 20
+
+legitButton.MouseButton1Click:Connect(function()
+	-- WalkSpeed reset
+	local char = LocalPlayer.Character
+	if char and char:FindFirstChildOfClass("Humanoid") then
+		char.Humanoid.WalkSpeed = 16
+	end
+	walkspeedActive = false
+	walkSpeedTextBox.Text = "16"
+	walkspeedToggleButton.Text = "OFF"
+	walkspeedToggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	if walkspeedLoopConnection then walkspeedLoopConnection:Disconnect() walkspeedLoopConnection = nil end
+
+	-- AttackSpeed reset
+	if char and char:GetAttribute("AttackSpeed") ~= nil then
+		char:SetAttribute("AttackSpeed", 1.35)
+	end
+	attackSpeedActive = false
+	attackSpeedTextBox.Text = "1.05"
+	attackSpeedToggleButton.Text = "OFF"
+	attackSpeedToggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	if attackSpeedLoopConnection then attackSpeedLoopConnection:Disconnect() attackSpeedLoopConnection = nil end
+
+	-- Combo reset
+	if char and char:GetAttribute("Combo") ~= nil then
+		char:SetAttribute("Combo", 1)
+	end
+	comboActive = false
+	comboValueTextBox.Text = "1"
+	comboToggleButton.Text = "OFF"
+	comboToggleButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+	if comboLoopConnection then comboLoopConnection:Disconnect() comboLoopConnection = nil end
+
+	-- AutoPotion reset
+	AutoPotionEnabled = false
+	autoPotionBtn.Text = "AutoPotion: OFF"
+	autoPotionBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+end)
+
 task.spawn(function()
 	while task.wait(0.5) do
 		if AutoPotionEnabled then
@@ -325,7 +368,7 @@ local contentElements = {
 	walkSpeedLabel, walkSpeedTextBox, walkspeedToggleButton,
 	attackSpeedLabel, attackSpeedTextBox, attackSpeedToggleButton,
 	comboLabel, comboValueTextBox, comboToggleButton,
-	espButton, autoPotionBtn
+	espButton, autoPotionBtn, legitButton
 }
 
 minimizeButton.MouseButton1Click:Connect(function()
